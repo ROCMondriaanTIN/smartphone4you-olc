@@ -2,7 +2,34 @@
 
 $db = new PDO("mysql:host=localhost;dbname=phone4you_olc","root", "");
 
-$query = $db->prepare("SELECT * FROM vendor ");
+
+
+$ascOrDesc = 'ASC';
+$description = '';
+
+if(isset($_POST['search'])){
+    $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+}
+
+if(isset($_POST['order-id'])){
+    $ordering = filter_input(INPUT_POST, 'ordering', FILTER_SANITIZE_SPECIAL_CHARS);
+    echo $ordering;
+    if($ordering === 'ASC'){
+        $ascOrDesc = 'DESC';
+    } else {
+        $ascOrDesc = 'ASC';
+    }
+
+}
+
+if($description === ''){
+    $query = $db->prepare("SELECT * FROM vendor ORDER BY id " . $ascOrDesc);
+} else{
+    $description = "%". $description . "%";
+    $query = $db->prepare("SELECT * FROM vendor WHERE description LIKE :description ORDER BY id " . $ascOrDesc);
+    $query->bindParam(':description', $description);
+}
+
 $query->execute();
 
 $vendors = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -52,13 +79,29 @@ $vendors = $query->fetchAll(PDO::FETCH_ASSOC);
 </header>
 <main>
     <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="inputDescription" class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control" id="inputDescription">
+                    </div>
+                    <button type="submit" name="search" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-md-12">
                 <table class="table">
                     <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th scope="col">
+                            <form method="post">
+                                <input type="hidden" name="ordering" value="<?=$ascOrDesc?>">
+                                <button type="submit" name="order-id" value="#">#</button>
+                            </form>
+                        </th>
                         <th scope="col">Name</th>
                         <th scope="col">Description</th>
                         <th scope="col">View</th>
